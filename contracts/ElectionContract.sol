@@ -197,7 +197,7 @@ contract ElectionContract {
     ) external {
         require(EllipticCurve.isOnCurve(c1x, c1y, A, B, P), "Nokta egride degil");
         require(EllipticCurve.isOnCurve(c2x, c2y, A, B, P), "Nokta egride degil");
-        require(!voted[msg.sender], "Zaten oy kullandiniz");
+        // require(!voted[msg.sender], "Zaten oy kullandiniz");
         Point memory C1 = Point(c1x, c1y);
         Point memory C2 = Point(c2x, c2y);
         require(verify_proof(C1, C2, proof), "invalid proof");
@@ -218,6 +218,31 @@ contract ElectionContract {
         }else{
             encryptedSum = sumVotes(encryptedSum, vote);
         }
+    }
+
+    function isPointEqual(uint256 ax, uint256 ay, uint256 bx, uint256 by) internal pure returns (bool) {
+        return ax == bx && ay == by;
+    }
+
+    function decrypt_weighted_sum(uint256 x) public view returns (uint256, uint256, uint256) {
+        if(encryptedSum.C1.x == 0 && encryptedSum.C1.y == 0
+        && encryptedSum.C2.x == 0 && encryptedSum.C2.y == 0 ){
+            return (0,0,0);
+        }
+
+        (uint256 sx, uint256 sy) = EllipticCurve.ecMultiply(x,encryptedSum.C1.x,encryptedSum.C1.y,A,P);
+        (uint256 mx, uint256 my) = EllipticCurve.ecSubstract(encryptedSum.C2.x,encryptedSum.C2.y,sx,sy,A,P);
+        uint256 i=1;
+
+
+        while(true) {
+            (uint256 qx, uint256 qy) = EllipticCurve.ecMultiply(i,Gx,Gy,A,P);
+            if(isPointEqual(qx, qy, mx, my)) {
+                return (i, qx, qy);
+            }   
+            i = i+1;
+        }
+
     }
 
 }
