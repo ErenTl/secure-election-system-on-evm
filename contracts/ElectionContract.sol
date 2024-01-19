@@ -4,7 +4,9 @@ pragma solidity 0.8.15;
 import "./EllipticCurve.sol";
 
 contract ElectionContract {
-    uint256 public counter;
+    uint256 public counter; // toplam kaç oy kullanıldığı
+    uint256 public totalWeight; //toplam kaç tane 1 oyu kulanıldığı
+    bool public isElectionFinished; //oylamanın bitip bitmediği
 
     mapping(uint256 => Vote) public votes;
     mapping(address => bool) public voted;
@@ -27,6 +29,11 @@ contract ElectionContract {
     Point public Y; // Public key, constructor tarafindan set edilecek
 
     Vote public encryptedSum; //oylarin homomorfik bir sekilde sifrelenip yer alacagi degisken
+
+    modifier electionCheck() {
+        require(!isElectionFinished, "Election is already finished");
+        _;
+    }
 
     constructor(uint256 yx, uint256 yy) {
         require(EllipticCurve.isOnCurve(yx, yy, A, B, P), "Nokta dogruda degil");
@@ -194,7 +201,7 @@ contract ElectionContract {
         uint256 c2x,
         uint256 c2y,
         uint256[12] memory proof
-    ) external {
+    ) electionCheck external {
         require(EllipticCurve.isOnCurve(c1x, c1y, A, B, P), "Nokta egride degil");
         require(EllipticCurve.isOnCurve(c2x, c2y, A, B, P), "Nokta egride degil");
         // require(!voted[msg.sender], "Zaten oy kullandiniz");
@@ -224,7 +231,7 @@ contract ElectionContract {
         return ax == bx && ay == by;
     }
 
-    function decrypt_weighted_sum(uint256 x) public view returns (uint256, uint256, uint256) {
+    function decrypt_weighted_sum(uint256 x) public view returns (uint256 ii, uint256 mxx, uint256 myy ) {
         if(encryptedSum.C1.x == 0 && encryptedSum.C1.y == 0
         && encryptedSum.C2.x == 0 && encryptedSum.C2.y == 0 ){
             return (0,0,0);
@@ -243,6 +250,13 @@ contract ElectionContract {
             i = i+1;
         }
 
+    }
+
+    function finish_election(uint256 x) public {
+        require(!isElectionFinished, "Election is already finished");
+        (uint256 i, uint256 qx, uint256 qy) = decrypt_weighted_sum(x);
+        totalWeight = i;
+        isElectionFinished = true;
     }
 
 }
