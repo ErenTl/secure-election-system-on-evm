@@ -12,21 +12,29 @@ contract ElectionContract {
     mapping(address => bool) public voted;
 
     // secp256r1 eliptik dogrusu icin parametreleri tanimliyoruz
+
+    // Eğrinin Büyüklüğü G'nin 0 olduğu yer örnekteki 19
     uint256 private constant N =
         0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551;
+
+    // Eğrinin Katsayıları Yani ECC'deki A ve B
     uint256 private constant A =
         0xffffffff00000001000000000000000000000000fffffffffffffffffffffffc;
     uint256 private constant B =
         0x5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b;
+    
+    // Modula Yani ECC'deki N
     uint256 private constant P =
         0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff;
+
+    // Generator point
     uint256 private constant Gx =
         0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296;
     uint256 private constant Gy =
         0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5;
     Point private G = Point(Gx, Gy); // Generator point
 
-    Point public Y; // Public key, constructor tarafindan set edilecek
+    Point public Y; // Public key, constructor tarafindan set edilecek Genkey ile oluşturuluyor
 
     Vote public encryptedSum; //oylarin homomorfik bir sekilde sifrelenip yer alacagi degisken
 
@@ -138,7 +146,7 @@ contract ElectionContract {
     }
 
     // verify proof fonksiyonu ile oylarin sifrelenmis halinin dogrulugunu kontrol ediyoruz
-        function verify_proof(
+    function verify_proof(
         Point memory C1,
         Point memory C2,
         uint256[12] memory p
